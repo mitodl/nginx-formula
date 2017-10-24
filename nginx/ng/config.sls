@@ -25,5 +25,17 @@ nginx_config:
     - template: jinja
 {% if 'source_path' not in nginx.server.config %}
     - context:
-        config: {{ nginx.server.config|json() }}
+        config: {{ nginx.server.config|json(sort_keys=False) }}
 {% endif %}
+
+{% for fname, settings in nginx.server.get('extra_config', {}).items() %}
+create_extra_config_{{ fname }}:
+  file.managed:
+    {{ sls_block(settings.pop('opts', {})) }}
+    - name: {{ nginx.server.get('conf_include_dir', '/etc/nginx/conf.d') }}/{{ fname }}.conf
+    - source: salt://nginx/ng/files/nginx.conf
+    - template: jinja
+    - makedirs: True
+    - context:
+        config: {{ settings|json(sort_keys=False) }}
+{% endfor %}
