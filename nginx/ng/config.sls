@@ -28,12 +28,21 @@ nginx_config:
         config: {{ nginx.server.config|json(sort_keys=False) }}
 {% endif %}
 
-{% for fname, settings in nginx.server.get('extra_config', {}).items() %}
+{% set extra_config = nginx.server.get('extra_config', {}) %}
+{% for fname in  extra_config %}
+{% set settings = extra_config[fname] %}
+{% if 'source_path' in settings %}
+{% set source_path = settings.pop('source_path') %}
+{% else %}
+{% set source_path = 'salt://nginx/ng/files/server.conf' %}
+{% endif %}
 create_extra_config_{{ fname }}:
   file.managed:
+    {% if settings is mapping %}
     {{ sls_block(settings.pop('opts', {})) }}
+    {% endif %}
     - name: {{ nginx.server.get('conf_include_dir', '/etc/nginx/conf.d') }}/{{ fname }}.conf
-    - source: salt://nginx/ng/files/nginx.conf
+    - source: {{ source_path }}
     - template: jinja
     - makedirs: True
     - context:
