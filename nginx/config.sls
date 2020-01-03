@@ -38,7 +38,7 @@ nginx_config:
 {% if 'source_path' in settings %}
 {% set source_path = settings.pop('source_path') %}
 {% else %}
-{% set source_path = 'salt://nginx/ng/files/server.conf' %}
+{% set source_path = 'salt://nginx/files/default/server.conf' %}
 {% endif %}
 create_extra_config_{{ fname }}:
   file.managed:
